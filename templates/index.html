@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    <h1>Sending form for temporary file</h1>
+    <form id="post_form" method="post">
+        {% csrf_token %}
+        <div class="submit-form">
+            <label for="file_field">Put your file here (if don't be active on site your file will be automatically
+                removed)</label>
+            <input type="file" id="file_field" required>
+            <br>
+            <label for="life_time_field">Limit life time of file</label>
+            <input type="text" id="life_time_field" required pattern="[0-2]?\d:[0-6]?\d:[0-6]?\d"
+                   placeholder="00:00:01">
+        </div>
+    </form>
+
+    <button id="submit_form" class="button">Submit</button>
+
+    <script>
+        var host = window.location.protocol + '//' + window.location.host
+
+        var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+
+        $('#submit_form').click(function () {
+            let file_field = $('#file_field')
+            let life_time_field = $('#life_time_field')
+
+            if (file_field.valid && life_time_field.valid) {
+                let fd = new FormData();
+
+                fd.append('file', file_field[0].files[0]);
+                fd.append('life_time', life_time_field.val());
+
+                $.ajax({
+                    type: 'POST',
+                    url: host + '/api/file/add/',
+                    processData: false,
+                    contentType: false,
+                    data: fd,
+                    success: () => {
+                        window.location.assign({% url 'list-files' %})
+                    },
+                    error: (xhr) => {
+                        if (xhr.status == '404') {
+                            alert("Were sent incorrect data");
+                        } else {
+                            alert('Occurred Error ' + xhr.status)
+                        }
+                    },
+                });
+            } else {
+                alert("Input data is invalid")
+            }
+
+        });
+    </script>
+{% endblock %}

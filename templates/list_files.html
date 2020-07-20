@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>File List</h1>
+    <h2 id="message">Please wait, page is loading</h2>
+    <section id="file_list">
+
+    </section>
+
+    {% load static %}
+    <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
+    <script type="html/tpl" id="file-template">
+        <article class="item">
+            <span class="file_name">File name: {file}</span>
+            <hr>
+            <span class="time_left">Time left: {time_left}</span>
+            <hr>
+            <button class="button" value="{id}" onclick="getFile(this)">Get file</button>
+        </article>
+        <hr> <hr> <hr>
+
+
+
+
+
+
+
+
+    </script>
+    <script>
+        let host = window.location.protocol + '//' + window.location.host
+        $(document).ready(function () {
+            $.ajax({
+                type: 'GET',
+                url: host + '/api/file/list/',
+                success: (json) => {
+                    let data = json.data;
+                    if (data.length !== 0) {
+                        $('#message').remove();
+
+                        for (let i = 0; i < data.length; i++) {
+                            data[i]['time_left'] = convertHMS(new Date(data[i]['end_time']) - Date.now())
+                            let html_item = renderTemplate('file-template', data[i])
+                            $('#file_list').append(html_item)
+                        }
+
+                    } else {
+                        $('#message').text('No files present');
+                    }
+
+                },
+                error: (xhr) => {
+                    alert('Occurred Error ' + xhr.status)
+                },
+            });
+        });
+
+        function getFile(e) {
+            $.ajax({
+                type: 'GET',
+                url: host + '/api/file/',
+                data: {
+                    file_id: e.value
+                },
+                success: (json) => {
+                    window.location.assign(json.file)
+                },
+                error: () => {
+                    console.log('sdfsd')
+                    window.location.assign('/404/')
+                }
+            });
+        }
+    </script>
+{% endblock %}
